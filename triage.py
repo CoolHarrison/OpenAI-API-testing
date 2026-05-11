@@ -19,6 +19,16 @@ triage_agent = Agent(
     handoffs=[spanish_agent, english_agent],
 )
 
+# Exit detection agent
+exit_agent = Agent(
+    name="exit_agent",
+    instructions=(
+        "Determine whether the user wants to end the conversation.\n"
+        "Respond ONLY with YES or NO.\n"
+        "YES = user wants to quit.\n"
+        "NO = user wants to continue."
+    ),
+)
 
 async def main():
     print("Chat started! Type 'quit' to exit.\n")
@@ -28,11 +38,6 @@ async def main():
 
     while True:
         user_input = input("You: ")
-
-        # Exit condition
-        if user_input.lower() in ["quit", "exit"]:
-            print("Goodbye!")
-            break
 
         # Add user message to conversation history
         conversation.append(
@@ -52,7 +57,18 @@ async def main():
         assistant_response = result.final_output
 
         # Print response
-        print(f"Assistant: {assistant_response}\n")
+        print(f"\nAssistant: {assistant_response}\n")
+
+         # Ask AI if user wants to quit
+        exit_result = await Runner.run(
+            exit_agent,
+            input=user_input,
+        )
+
+        decision = exit_result.final_output.strip().upper()
+
+        if decision == "YES":
+            break
 
         # Save assistant response to memory
         conversation.append(
