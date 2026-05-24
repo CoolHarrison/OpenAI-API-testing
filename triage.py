@@ -31,8 +31,6 @@ exit_agent = Agent(
 )
 
 async def main():
-    print("Chat started! Type 'quit' to exit.\n")
-
     # Stores conversation history
     conversation = []
 
