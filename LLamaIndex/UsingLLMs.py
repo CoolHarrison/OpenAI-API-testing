@@ -23,10 +23,11 @@ messages = [
 # chat_response = llm.chat(messages)
 # print(chat_response)
 
-# stream_response = llm.stream_chat(messages)
 
-# for token in stream_response:
-#     print(token.delta, end="", flush=True)
+stream_response = llm.stream_chat(messages)
+
+for token in stream_response:
+    print(token.delta, end="", flush=True)
 
 
 # IMGmessages = [
@@ -42,17 +43,17 @@ messages = [
 # print(resp.message.content)
 
 
-def generate_song(name: str, artist: str) -> dict:
-    """Generates a song with provided name and artist."""
-    return {"name": name, "artist": artist}
+# def generate_song(name: str, artist: str) -> dict:
+#     """Generates a song with provided name and artist."""
+#     return {"name": name, "artist": artist}
 
-tool = FunctionTool.from_defaults(fn=generate_song)
+# tool = FunctionTool.from_defaults(fn=generate_song)
 
-response = llm.predict_and_call(
-    [tool],
-    "Pick a random song for me",
-)
-print(str(response))
+# response = llm.predict_and_call(
+#     [tool],
+#     "Pick a random song for me and its artist using the generate_song tool, and",
+# )
+# print(str(response))
 
 async def main(): 
     
