@@ -26,14 +26,14 @@ llm = OpenAI(model="gpt-4o-mini")
 
 async def search_web(query: str) -> str:
     """Useful for using the web to answer questions."""
-    client = AsyncTavilyClient(api_key="tvly-...")
+    client = AsyncTavilyClient(api_key=os.getenv("TAVILY_API_KEY"))
     return str(await client.search(query))
 
 
 async def record_notes(ctx: Context, notes: str, notes_title: str) -> str:
     """Useful for recording notes on a given topic. Your input should be notes with a title to save the notes under."""
     async with ctx.store.edit_state() as ctx_state:
-        if "research_notes" not in ctx_state["state"]:
+        if "research_notes" not in ctx_state["state"]: #creates research key in ctx_state if not existing
             ctx_state["state"]["research_notes"] = {}
         ctx_state["state"]["research_notes"][notes_title] = notes
     return "Notes recorded."
@@ -52,6 +52,13 @@ async def review_report(ctx: Context, review: str) -> str:
         ctx_state["state"]["review"] = review
     return "Report reviewed."
 
+# async def get_notes(ctx: Context) -> str:
+#     state = await ctx.store.get("state")
+#     return str(state["research_notes"])
+
+# async def get_report(ctx: Context) -> str:
+#     state = await ctx.store.get("state")
+#     return state["report_content"]
 
 research_agent = FunctionAgent(
     name="ResearchAgent",
@@ -118,35 +125,35 @@ async def main():
     current_tool_calls = ""
     async for event in handler.stream_events():
         if (
-            hasattr(event, "current_agent_name")
-            and event.current_agent_name != current_agent
+            hasattr(event, "current_agent_name") #does event have a name?
+            and event.current_agent_name != current_agent #did agent change
         ):
-            current_agent = event.current_agent_name
+            current_agent = event.current_agent_name 
             print(f"\n{'='*50}")
             print(f"🤖 Agent: {current_agent}")
             print(f"{'='*50}\n")
 
-        # if isinstance(event, AgentStream):
-        #     if event.delta:
-        #         print(event.delta, end="", flush=True)
+        if isinstance(event, AgentStream):
+            if event.delta:
+                print(event.delta, end="", flush=True)
         # elif isinstance(event, AgentInput):
         #     print("📥 Input:", event.input)
         elif isinstance(event, AgentOutput):
             if event.response.content:
                 print("📤 Output:", event.response.content)
-            if event.tool_calls:
+            if event.tool_calls: #Decides which tool to use
                 print(
                     "🛠️  Planning to use tools:",
                     [call.tool_name for call in event.tool_calls],
                 )
-        elif isinstance(event, ToolCallResult):
-            print(f"🔧 Tool Result ({event.tool_name}):")
-            print(f"  Arguments: {event.tool_kwargs}")
-            print(f"  Output: {event.tool_output}")
-        elif isinstance(event, ToolCall):
-            print(f"🔨 Calling Tool: {event.tool_name}")
-            print(f"  With arguments: {event.tool_kwargs}")
+        # elif isinstance(event, ToolCallResult):
+        #     print(f"🔧 Tool Result ({event.tool_name}):")
+        #     print(f"  Arguments: {event.tool_kwargs}")
+        #     print(f"  Output: {event.tool_output}")
+        # elif isinstance(event, ToolCall):
+        #     print(f"🔨 Calling Tool: {event.tool_name}")
+        #     print(f"  With arguments: {event.tool_kwargs}")
 
-    state = await handler.ctx.store.get("state")
+    state = await handler.ctx.store.get("state") #Updates state
     print(state["report_content"])
 asyncio.run(main()) 
